@@ -109,6 +109,7 @@ resource "aws_lb_listener" "listener" {
 }
 # create a server security group
 resource "aws_security_group" "server_sg" {
+  count       = var.lb_required ? 0 : 1
   name        = "${var.env}-vsg-${var.component}-serversg"
   description = "${var.env}-vsg-${var.component}-serversg"
   vpc_id      = var.vpc_id
