@@ -63,7 +63,7 @@ resource "aws_lb" "lb" {
   name               = "${var.env}-${var.component}-lb"
   internal           = var.lb_internal_facing == "public" ? false : true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.server_sg.id]
+  security_groups    = [aws_security_group.lb_sg[0].id]
   subnets            = var.lb_subnets
    tags = {
     Environment = "${var.env}-${var.component}-lb"
@@ -136,6 +136,7 @@ resource "aws_security_group" "server_sg" {
 }
 # create a load balancer security group
 resource "aws_security_group" "lb_sg" {
+  count       = var.lb_required ? 1 : 0
   name        = "${var.env}-vsg-${var.component}-lbsg"
   description = "${var.env}-vsg-${var.component}-lbsg"
   vpc_id      = var.vpc_id
