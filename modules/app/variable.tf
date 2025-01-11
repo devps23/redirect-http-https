@@ -21,6 +21,6 @@ variable "bastion_nodes" {}
 variable "server_app_port_cidr"{
 default = null
 }
-# variable "lb_app_port_cidr" {
-#   default = []
-# }
+variable "lb_app_port_cidr" {
+  default = []
+}

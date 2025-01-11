@@ -118,12 +118,12 @@ resource "aws_security_group" "server_sg" {
     protocol    = "TCP"
     cidr_blocks = var.server_app_port_cidr
   }
-#   ingress {
-#     from_port   =  22
-#     to_port     =  22
-#     protocol    = "TCP"
-#     cidr_blocks = var.bastion_nodes
-#   }
+  ingress {
+    from_port   =  22
+    to_port     =  22
+    protocol    = "TCP"
+    cidr_blocks = var.bastion_nodes
+  }
   egress {
     from_port   =  0
     to_port     =  0
@@ -134,27 +134,27 @@ resource "aws_security_group" "server_sg" {
     Name = "${var.env}-vsg-${var.component}-serversg"
   }
 }
-# # create a load balancer security group
-# resource "aws_security_group" "loabbl_sg" {
-#   name        = "${var.env}-vsg-${var.component}-lbsg"
-#   description = "${var.env}-vsg-${var.component}-lbsg"
-#   vpc_id      = var.vpc_id
-#   ingress {
-#     from_port   =  0
-#     to_port     =  0
-#     protocol    = "-1"
-#     cidr_blocks = var.lb_app_port_cidr
-#   }
-#   egress {
-#     from_port   =  0
-#     to_port     =  0
-#     protocol    = "-1"
-#     cidr_blocks = ["0.0.0.0/0"]
-#   }
-#   tags = {
-#     Name = "${var.env}-vsg-${var.component}-lbsg"
-#   }
-# }
+# create a load balancer security group
+resource "aws_security_group" "lb_sg" {
+  name        = "${var.env}-vsg-${var.component}-lbsg"
+  description = "${var.env}-vsg-${var.component}-lbsg"
+  vpc_id      = var.vpc_id
+  ingress {
+    from_port   =  0
+    to_port     =  0
+    protocol    = "-1"
+    cidr_blocks = var.lb_app_port_cidr
+  }
+  egress {
+    from_port   =  0
+    to_port     =  0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  tags = {
+    Name = "${var.env}-vsg-${var.component}-lbsg"
+  }
+}
 
 
 

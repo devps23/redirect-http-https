@@ -29,7 +29,7 @@ module "frontend" {
 #   server app port subnet depends from bottom to top
   server_app_port_cidr = var.public_subnets
 #   load balancer app port cidr from top to bottom
-#    lb_app_port_cidr = ["0.0.0.0/0"]
+   lb_app_port_cidr = ["0.0.0.0/0"]
 }
 module "backend" {
   depends_on = [module.mysql]
@@ -48,7 +48,7 @@ module "backend" {
   bastion_nodes = var.bastion_nodes
   server_app_port_cidr = concat(var.frontend_subnets,var.backend_subnets)
 #   load balancer port cidr connects with backend subnets
-#   lb_app_port_cidr = var.frontend_subnets
+  lb_app_port_cidr = var.frontend_subnets
 }
 module "mysql" {
   source            = "./modules/app"
