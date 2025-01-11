@@ -2,7 +2,7 @@
 resource "aws_instance" "instance" {
   ami = data.aws_ami.ami.image_id
   instance_type = var.instance_type
-  vpc_security_group_ids = [aws_security_group.server_sg[0].id]
+  vpc_security_group_ids = [aws_security_group.server_sg.id]
   subnet_id = var.subnets_id[0]
   instance_market_options {
     market_type = "spot"
@@ -63,7 +63,7 @@ resource "aws_lb" "lb" {
   name               = "${var.env}-${var.component}-lb"
   internal           = var.lb_internal_facing == "public" ? false : true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.server_sg[0].id]
+  security_groups    = [aws_security_group.server_sg.id]
   subnets            = var.lb_subnets
    tags = {
     Environment = "${var.env}-${var.component}-lb"
@@ -109,7 +109,6 @@ resource "aws_lb_listener" "listener" {
 }
 # create a server security group
 resource "aws_security_group" "server_sg" {
-  count       = var.lb_required ? 0 : 1
   name        = "${var.env}-vsg-${var.component}-serversg"
   description = "${var.env}-vsg-${var.component}-serversg"
   vpc_id      = var.vpc_id
