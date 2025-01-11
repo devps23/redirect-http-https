@@ -10,6 +10,7 @@ module "vpc"{
   mysql_subnets = var.mysql_subnets
   availability_zone = var.availability_zone
   public_subnets = var.public_subnets
+
 }
 module "frontend" {
   depends_on = [module.backend]
@@ -30,6 +31,8 @@ module "frontend" {
   server_app_port_cidr = var.public_subnets
 #   load balancer app port cidr from top to bottom
    lb_app_port_cidr = ["0.0.0.0/0"]
+  certificate_arn = "arn:aws:acm:us-east-1:041445559784:certificate/9019782f-d3d2-47b1-b5c0-b1efba5276b8"
+  lb_app_port = {http:80,https:443}
 }
 module "backend" {
   depends_on = [module.mysql]
@@ -49,6 +52,7 @@ module "backend" {
   server_app_port_cidr = concat(var.frontend_subnets,var.backend_subnets)
 #   load balancer port cidr connects with backend subnets
   lb_app_port_cidr = var.frontend_subnets
+  lb_app_port = {http:8080}
 }
 module "mysql" {
   source            = "./modules/app"

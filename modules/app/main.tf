@@ -96,9 +96,36 @@ resource "aws_lb_target_group_attachment" "tg_attachment" {
   target_id        = aws_instance.instance.id
   port             = var.app_port
 }
+# redirect http to https
+resource "aws_lb_listener" "frontend_http" {
+  count              = var.lb_required && var.lb_internal_facing == "public" ? 1 : 0
+  load_balancer_arn = aws_lb.lb[0].arn
+  port              = var.app_port
+  protocol          = "HTTP"
+  default_action {
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+resource "aws_lb_listener" "frontend_https" {
+  count              = var.lb_required && var.lb_internal_facing == "public" ? 1 : 0
+  load_balancer_arn = aws_lb.lb[0].arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-1-2021-06"
+  certificate_arn   = var.certificate_arn
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.tg[0].arn
+  }
+}
 //create a listener
-resource "aws_lb_listener" "listener" {
-  count             = var.lb_required ? 1 : 0
+resource "aws_lb_listener" "backend-http" {
+  count             = var.lb_required && var.lb_internal_facing != "public" ? 1 : 0
   load_balancer_arn = aws_lb.lb[0].arn
   port              = var.app_port
   protocol          = "HTTP"
@@ -107,6 +134,7 @@ resource "aws_lb_listener" "listener" {
     target_group_arn = aws_lb_target_group.tg[0].arn
   }
 }
+
 # create a server security group
 resource "aws_security_group" "server_sg" {
   name        = "${var.env}-vsg-${var.component}-serversg"
@@ -140,11 +168,14 @@ resource "aws_security_group" "lb_sg" {
   name        = "${var.env}-vsg-${var.component}-lbsg"
   description = "${var.env}-vsg-${var.component}-lbsg"
   vpc_id      = var.vpc_id
-  ingress {
-    from_port   =  0
-    to_port     =  0
-    protocol    = "-1"
-    cidr_blocks = var.lb_app_port_cidr
+  dynamic "ingress" {
+    for_each = var.lb_app_port
+    content {
+      from_port   =  ingress.value
+      to_port     =  ingress.value
+      protocol    = "TCP"
+      cidr_blocks = var.lb_app_port_cidr
+    }
   }
   egress {
     from_port   =  0
