@@ -61,5 +61,6 @@ module "mysql" {
   subnets_id = module.vpc.mysql_subnets
   bastion_nodes = var.bastion_nodes
   server_app_port_cidr = var.backend_subnets
+  app_port = 3306
 }
 
