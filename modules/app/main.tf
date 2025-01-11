@@ -2,7 +2,7 @@
 resource "aws_instance" "instance" {
   ami = data.aws_ami.ami.image_id
   instance_type = var.instance_type
-  vpc_security_group_ids = [aws_security_group.sg.id]
+  vpc_security_group_ids = [aws_security_group.server_sg.id]
   subnet_id = var.subnets_id[0]
   instance_market_options {
     market_type = "spot"
@@ -23,45 +23,24 @@ resource "aws_instance" "instance" {
   }
 }
 
-# create a security group
-resource "aws_security_group" "sg" {
-  name        = "${var.env}-vsg-${var.component}"
-  description = "${var.env}-vsg-${var.component}"
-  vpc_id      = var.vpc_id
-  ingress {
-    from_port   =  0
-    to_port     =  0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  egress {
-    from_port   =  0
-    to_port     =  0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  tags = {
-    Name = "${var.env}-vsg-${var.component}"
-  }
-}
 
-resource "null_resource" "null_instance" {
-  connection {
-    type     = "ssh"
-    user     = jsondecode(data.vault_generic_secret.my_secret.data_json).username
-    password = jsondecode(data.vault_generic_secret.my_secret.data_json).password
-    host     = aws_instance.instance.private_ip
-
-  }
-  provisioner "remote-exec" {
-    inline = [
-      "sudo dnf install ansible -y",
-      "sudo pip3.11 install ansible hvac",
-      "ansible-pull -i localhost, -U https://github.com/devps23/expense-practice-ansible get-secrets.yml -e env=${var.env} -e component_name=${var.component} -e vault_token=${var.vault_token}",
-      "ansible-pull -i localhost, -U https://github.com/devps23/expense-practice-ansible expense.yml -e env=${var.env} -e component_name=${var.component} -e @~/secrets.json -e @~/app.json"
-    ]
-  }
-}
+# resource "null_resource" "null_instance" {
+#   connection {
+#     type     = "ssh"
+#     user     = jsondecode(data.vault_generic_secret.my_secret.data_json).username
+#     password = jsondecode(data.vault_generic_secret.my_secret.data_json).password
+#     host     = aws_instance.instance.private_ip
+#
+#   }
+#   provisioner "remote-exec" {
+#     inline = [
+#       "sudo dnf install ansible -y",
+#       "sudo pip3.11 install ansible hvac",
+#       "ansible-pull -i localhost, -U https://github.com/devps23/expense-practice-ansible get-secrets.yml -e env=${var.env} -e component_name=${var.component} -e vault_token=${var.vault_token}",
+#       "ansible-pull -i localhost, -U https://github.com/devps23/expense-practice-ansible expense.yml -e env=${var.env} -e component_name=${var.component} -e @~/secrets.json -e @~/app.json"
+#     ]
+#   }
+# }
 resource "aws_route53_record" "server_record" {
   count      = var.lb_required ? 0 : 1
   name      = "${var.component}-${var.env}"
@@ -84,7 +63,7 @@ resource "aws_lb" "lb" {
   name               = "${var.env}-${var.component}-lb"
   internal           = var.lb_internal_facing == "public" ? false : true
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.sg.id]
+  security_groups    = [aws_security_group.server_sg[0].id]
   subnets            = var.lb_subnets
    tags = {
     Environment = "${var.env}-${var.component}-lb"
